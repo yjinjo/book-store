@@ -1,4 +1,4 @@
-# app/book_scrap.py
+# app/book_scraper.py
 
 from app.config import get_secret
 import aiohttp
