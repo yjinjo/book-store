@@ -1,0 +1,26 @@
+<!-- app/templates/index.html -->
+
+<html>
+<head>
+    <title> {{ title }}</title>
+    <link rel="stylesheet" href="https://unpkg.com/mvp.css">
+</head>
+<body>
+    <header>
+        <h1>Book Collector</h1>
+    </header>
+    <center>
+        <form id="search_form" action="/search">
+            <input 
+                id="search_input" 
+                type="search" 
+                placeholder="keyword"  
+                name="q">
+            <button type="submit">검색</button>
+        </form>
+    </center>
+    <main>
+        {{ keyword }}
+    </main>
+</body>
+</html>
