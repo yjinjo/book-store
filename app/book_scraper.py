@@ -52,5 +52,3 @@ class NaverBookScraper:
 
 if __name__ == "__main__":
     scraper = NaverBookScraper()
-    print(scraper.run("파이썬", 3))
-    print(len(scraper.run("파이썬", 3)))

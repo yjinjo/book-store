@@ -23,19 +23,29 @@ templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 
 @app.get("/", response_class=HTMLResponse)
-def root(request: Request):
+async def root(request: Request):
     return templates.TemplateResponse(
         "./index.html", {"request": request, "title": "Book Collector"}
     )
 
 
 @app.get("/search", response_class=HTMLResponse)
-async def search(request: Request, q: str):
+async def search(request: Request):
     # 1. 쿼리에서 검색어 추출
-    keyword = q
+    keyword = request.query_params.get("q")
     # (예외처리)
     #   - 검색어가 없다면 사용자에게 검색을 요구 return
+    if not keyword:
+        context = {"request": request}
+        return templates.TemplateResponse("./index.html", context=context)
     #   - 해당 검색어에 대해 수집된 데이터가 이미 DB에 존재한다면 해당 데이터를 사용자에게 보여준다. return
+    #     - engine.find_one(모델, 조건)
+    if await mongodb.engine.find_one(BookModel, BookModel.keyword == keyword):
+        # 위의 키워드에 대해 수집된 데이터가 DB에 존재한다면 해당 데이터를 사용자에게 보여준다.
+        books = await mongodb.engine.find(BookModel, BookModel.keyword == keyword)
+        context = {"request": request, "keyword": keyword, "books": books}
+
+        return templates.TemplateResponse("./index.html", context=context)
 
     # 2. 데이터 수집기로 해당 검색어에 대해 데이터를 수집한다.
     naver_book_scraper = NaverBookScraper()
@@ -47,20 +57,20 @@ async def search(request: Request, q: str):
         book_model = BookModel(
             keyword=keyword,
             publisher=book["publisher"],
-            price=book["discount"],
+            discount=book["discount"],
             image=book["image"],
         )
         book_models.append(book_model)
         # engine의 save가 awaitable 객체이기 때문에 await을 붙여야한다.
         # await mongodb.engine.save(book_model)
-    await mongodb.engine.save_all(book_models)
+
     # 3. DB에 수집된 데이터를 저장한다.
+    await mongodb.engine.save_all(book_models)
+
     #   - 수집된 각각의 데이터에 대해서 DB에 들어갈 모델 인스턴스를 찍는다.
     #   - 각 모델 인스턴스를 DB에 저장한다.
-
-    return templates.TemplateResponse(
-        "./index.html", {"request": request, "title": "Book Collector", "keyword": q}
-    )
+    context = {"request": request, "keyword": keyword, "books": books}
+    return templates.TemplateResponse("./index.html", context=context)
 
 
 @app.on_event("startup")
