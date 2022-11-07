@@ -19,7 +19,9 @@ app = FastAPI()
 
 # app.mount("/static", StaticFiles(directory="static"), name="static")
 
-templates = Jinja2Templates(directory=BASE_DIR / "templates")
+# templates = Jinja2Templates(directory=BASE_DIR / "templates")
+# 위의 directory 경로가 linux 환경에서는 안될 수 있으므로 아래와 같이 수정
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 
 @app.get("/", response_class=HTMLResponse)
